@@ -244,7 +244,6 @@ def train(net, criterion, opti, training_generator, validation_generator, max_ep
         for batch_X, batch_y in training_generator:
             opti.zero_grad() #Clears the gradients of all variables.
 
-            # YOUR CODE HERE
             output=net(batch_X)
             loss=criterion(output,batch_y)
             loss.backward()
@@ -261,8 +260,6 @@ def train(net, criterion, opti, training_generator, validation_generator, max_ep
         cnt = 0
         with torch.set_grad_enabled(False):
             for batch_X, batch_y in validation_generator:
-
-                # YOUR CODE HERE
                 output=net(batch_X)
                 loss=criterion(output,batch_y)
                 running_loss=running_loss+loss
