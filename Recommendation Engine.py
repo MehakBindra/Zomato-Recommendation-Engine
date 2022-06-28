@@ -187,7 +187,6 @@ def masked_loss(preds, labels):
 
     loss = 0
 
-    # YOUR CODE HERE
     N_batch=labels.shape[0]
     zeros=torch.zeros(N_batch,5138)
     ones=torch.ones(N_batch,5138)
@@ -215,11 +214,6 @@ opti = optim.SGD(net.parameters(), lr=0.1)
 # 2. Compute the loss between inputs and labels say *loss*
 # 3. Backpropagate the gradients using *loss.backward()*
 # 4. Take the optimization step using the *step* method of the optimizer instance.
-#
-# This function will be manually graded since there the training results might vary each time we run the network. Effectively you should see a decrease in both train and validation losses. The final training loss should be around 1.7 and validation loss should be around 2 to 2.2 towards the end.
-
-# In[23]:
-
 
 def train(net, criterion, opti, training_generator, validation_generator, max_epochs = 10):
 
@@ -281,16 +275,9 @@ def train(net, criterion, opti, training_generator, validation_generator, max_ep
 
     return train_losses, val_losses
 
-
-# In[24]:
-
-
 net = DAE()
 opti = optim.SGD(net.parameters(), lr = 1e-1)
 train_losses, val_losses = train(net, masked_loss, opti, training_generator, validation_generator, 20)
-
-
-# In[25]:
 
 
 # Finally we plot the graphs for loss vs epochs.
@@ -301,9 +288,6 @@ plt.xlabel('Epochs')
 
 
 # Lets see how the network predictions compare with the actual ratings.
-
-# In[26]:
-
 
 x, y = test_dataset.__getitem__(4)
 pred = net(x)
