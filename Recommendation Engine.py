@@ -27,29 +27,15 @@ NUM_USERS = 3579
 
 # ## Restaurant reviews data
 #
-# We have reviews of 5138 restaurants from 3579 different users. Each user is given an ID from 0 to 3578 and similarly, each restaurant is given an ID from 0 to 5137. We have provided you 3 files `train.dat` and `test1.dat` and `test_hidden.dat` containing training data, testing data and hidden test data respectively. For now, do not worry about `train_hidden.dat`. The format of data in the other 2 files is:
+# We have reviews of 5138 restaurants from 3579 different users. Each user is given an ID from 0 to 3578 and similarly, each restaurant is given an ID from 0 to 5137. The format of data in the train.dat and test.dat file is:
 #
 #                         userID, restaurantID, rating
 #
 # This means each row contains a rating given to a particular restaurant by a given user.
 
-# We have removed some ratings from each user at random from train set and added them to test set. This way we can compare the final predictions on the train set and compare with ratings present in the test set, to find out how the network is actually performing.
-# During training, we use the rating data from the `train.dat` file to train our autoencoder. During testing though we feed the data from `train.dat` to the autoencoder and compare the predictions with the values given in `test.dat`.
-# `test_hidden.dat` only contains the userID and restaurantID and not the ratings.
-#
-# Before we start building our model, we first need to get our data in a suitable form which can be fed to the network. The input to the network will be a vector of size 5138 (number of restaurants) for each user, where each element of the vector will contain the rating of the restaurant whose id matches with the index of that element. If the user has not rated a particular restaurant, the element corresponding to that will be set to zero.
-# For example: If a user has only rated the restaurants with ids 3, 19 and 1009 as 2, 4 and 3.5 respectively, then the feature vector for that user will be a 5138 sized array containing 2 in the index 3, 4 in the index 19, 3.5 in index 1009 and zero everywhere else.
-# Hence our full dataset will be a matrix of size 3579 X 5138 (number of users X number of restaurants).
-# Since we know that the users have reviewed only a small portion of all 5138 restaurants, the data matrix will be very sparse (will mostly contain zeros). Hence it does not make sense to store the whole 3579 X 5138 matrix in memory. Instead, we create a sparse matrix where for each user we store the tuples containing the restaurant id and the rating for that restaurant.
-# For example: In the previous example where we had a user who rated restaurants 3, 19 and 1009 only, we will store the tuples [(3, 2), (19, 4), (1009, 3.5)]. Earlier we store an array of size 5138 elements for the user but now we need to have an array containing 3 elements, saving much memory. While feeding the inputs to the neural net we convert this sparse representation to the full 5138-dimensional vector.
-# The function `get_sparse_mat` takes as the input the filename string which can either be `train.dat` and `test.dat` and constructs a sparse matrix containing the list of tuples for each user as we described above. The output of the function should be a python list of size 3579 with each element being a list of tuples.
-#
-# **Note 1:** You can read .dat files similar to how you read .txt files. Use python's inbuilt function *open* to create a file pointer lets say *fp*, then you can use functions like read, readline etc. to read the data values from the file. Refer to this [link](https://www.programiz.com/python-programming/file-operation) if you want a refresher to file IO in python.
-#
-# **Note 2:** You can also read .dat files using pandas similar to the way you read CSV files using *pd.read_csv* function.
-#
-# **Note 3:** The tuples in the list (restaurantID, rating) should have restaurantID as an integer value and rating as a float.
-#
+# The function `get_sparse_mat` takes as the input the filename string which can either be `train.dat` and `test.dat` and constructs a sparse matrix containing the list of tuples for each user.
+# The tuples in the list (restaurantID, rating) should have restaurantID as an integer value and rating as a float.
+
 
 
 def get_sparse_mat(filename):
@@ -127,8 +113,7 @@ validation_generator = data.DataLoader(test_dataset, **params)
 
 
 # ## Implementing Autoencoder Architecture
-
-# Now you will implement the autoencoder network which we will be using to build our recommendation system. The architeture of the network should be:
+# The architeture of the network is:
 #
 # INPUT(size = 5138) -> FC+Tanh(size = 32) -> FC(size = 5138);
 
@@ -171,7 +156,7 @@ class DAE(nn.Module):
 
 net = DAE()
 
-# Now that we have defined our autoencoder network we need to define a loss function to train our model. We will be using mean squared error as our loss function which can be simply implemented by taking the squared sum of the errors between the model predictions and the labels and dividing it by the number of training examples. However, there is a small catch here. As we described in the beginning, for a user we have to compute this error for the restaurants whose ratings have been given by the user and not for the restaurants with the missing ratings.
+# Now that we have defined our autoencoder network we need to define a loss function to train our model. We will be using mean squared error as our loss function which can be simply implemented by taking the squared sum of the errors between the model predictions and the labels and dividing it by the number of training examples. However, there is a small catch here.
 #
 # The function masked_loss takes as the input predictions and labels and calculates the mean squared error for the available ratings. One way of doing this is to first define a mask which is zero for the ratings not available and one for the available ones. Then we multiply this mask with the model predictions so that it zeros out the predictions of the network which are missing in the input data. Now we can calculate the sum of squared errors between the masked predictions and the input ratings and divide it with the number of available ratings which can be calculated by counting the number of ones in the mask.
 
@@ -317,7 +302,7 @@ def get_predictions(net, train_data = train_smat):
         for j in range(len(train_data[i])):
             x[train_data[i][j][0]] = train_data[i][j][1]
         with torch.set_grad_enabled(False):
-            pred = net(x).detach().numpy() ## This logic might be different for your model, change this accordingly
+            pred = net(x).detach().numpy()
 
         pred = pred[test_smat[i]]
         user_rest_pred = np.concatenate([i*np.ones((len(pred),1),dtype=np.int),np.array(test_smat[i],dtype=np.int)[:,None], np.array(pred)[:,None]],axis = 1)
